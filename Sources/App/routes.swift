@@ -74,9 +74,11 @@ func routes(_ app: Application) throws {
 	
 	app.get("api", "acronyms", "search") {
 		req -> EventLoopFuture<[Acronym]> in
+		// retrieve the search term from the URL query string
 		guard let searchTerm = req.query[String.self, at: "term"] else {
 			throw Abort(.badRequest)
 		}
+		// find all the acronyms whos short prop matches
 		return Acronym.query(on: req.db)
 			.filter(\.$short == searchTerm)
 			.all()
