@@ -1,8 +1,13 @@
-//
-//  File.swift
-//  
-//
-//  Created by Rahan Benabid on 31/7/2024.
-//
+import Vapor
+import Fluent
 
-import Foundation
+struct AcronymsController: RouteCollection {
+	func boot(routes: RoutesBuilder) throws {
+		func getAllHandler(_ req: Request) -> EventLoopFuture<[Acronym]> {
+			Acronym.query(on: req.db).all()
+		}
+				
+		// registering the routes
+		routes.get("api", "acronyms", use: getAllHandler)
+	}
+}

@@ -26,5 +26,4 @@ enum Entrypoint {
         try await app.execute()
         try await app.asyncShutdown()
     }
-	// fork please
 }

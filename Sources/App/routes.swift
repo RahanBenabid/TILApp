@@ -2,36 +2,31 @@ import Fluent
 import Vapor
 
 func routes(_ app: Application) throws {
-    app.get { req async in
-        "It works!"
-    }
-
-    app.get("hello") { req async -> String in
-        "Hello, world!" 
-    }
-    
-    // the route api/acronyms accepts a POST req and returns an EvenLoopFuture<Acronym> which means it returns the acronym once its saved
-    app.post("api", "acronyms") { req -> EventLoopFuture<Acronym> in
-        // using Codable, we can decode the request JSON data into an Acronym
-        let acronym = try req.content.decode(Acronym.self)
-        // save the model
-        return acronym.save(on: req.db).map {
-            // returns the acronym when the save is complete and here we use .map
-            acronym
-        }
-    }
+	app.get { req async in
+		"It works!"
+	}
 	
-	// get all the data
-	app.get("api", "acronyms") { req -> EventLoopFuture<[Acronym]> in
-		Acronym.query(on: req.db).all()
-    }
+	app.get("hello") { req async -> String in
+		"Hello, world!"
+	}
+	
+	// the route api/acronyms accepts a POST req and returns an EvenLoopFuture<Acronym> which means it returns the acronym once its saved
+	app.post("api", "acronyms") { req -> EventLoopFuture<Acronym> in
+		// using Codable, we can decode the request JSON data into an Acronym
+		let acronym = try req.content.decode(Acronym.self)
+		// save the model
+		return acronym.save(on: req.db).map {
+			// returns the acronym when the save is complete and here we use .map
+			acronym
+		}
+	}
 	
 	// gets the value in the request path
 	app.get("api", "acronyms", ":acronymID") {
 		req -> EventLoopFuture<Acronym> in
 		// find() takes a UUID as a param
 		Acronym.find(req.parameters.get("acronymID"), on: req.db)
-			// since find() returns EventLoopFuture<Acronym?>, we handle this difference by adding unwrap()
+		// since find() returns EventLoopFuture<Acronym?>, we handle this difference by adding unwrap()
 			.unwrap(or: Abort(.notFound))
 	}
 	
@@ -63,11 +58,11 @@ func routes(_ app: Application) throws {
 		Acronym.find(req.parameters.get("acronymID"), on: req.db)
 			.unwrap(or: Abort(.notFound))
 		
-			// wait for the acronym to return from the database
+		// wait for the acronym to return from the database
 			.flatMap { acronym in
 				// deletes it
 				acronym.delete(on: req.db)
-					// trandforms the result into a 204 code: no result
+				// trandforms the result into a 204 code: no result
 					.transform(to: .noContent)
 			}
 	}
@@ -79,9 +74,33 @@ func routes(_ app: Application) throws {
 			throw Abort(.badRequest)
 		}
 		// find all the acronyms whos short prop matches
-		return Acronym.query(on: req.db)
-			.filter(\.$short == searchTerm)
+		return Acronym.query(on: req.db).group(.or) { or in
+			or.filter(\.$short == searchTerm)
+			or.filter(\.$long == searchTerm)
+		}.all()
+	}
+	
+	// get only the first result
+	app.get("api", "acronyms", "first") {
+		req -> EventLoopFuture<Acronym> in
+		Acronym.query(on: req.db)
+			.first()
+			.unwrap(or: Abort(.notFound))
+	}
+	
+	// sorting the results
+	app.get("api", "acronyms", "sorted") {
+		req -> EventLoopFuture<[Acronym]> in
+		Acronym.query(on: req.db)
+			.sort(\.$short, .ascending)
 			.all()
 	}
-	// this shit isn't working
+	
+	
+	/// better orgnanise routes
+	
+	// create a new AcronymController
+	let acronymsController = AcronymsController()
+	// to ensure the route gets regitered
+	try app.register(collection: acronymsController)
 }
