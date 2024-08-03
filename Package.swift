@@ -12,7 +12,7 @@ let package = Package(
 		// 🗄 An ORM for SQL and NoSQL databases.
 		.package(url: "https://github.com/vapor/fluent.git", from: "4.9.0"),
 		// 🐘 Fluent driver for Postgres.
-		.package(url: "https://github.com/vapor/fluent-postgres-driver.git", from: "2.0.0"),
+		.package(url: "https://github.com/vapor/fluent-postgres-driver.git", from: "2.8.0"),
 		// 🔵 Non-blocking, event-driven networking for Swift. Used for custom executors
 		.package(url: "https://github.com/apple/swift-nio.git", from: "2.65.0"),
 	],
