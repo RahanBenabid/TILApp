@@ -16,8 +16,8 @@ public func configure(_ app: Application) throws {
       ?? "vapor_database"
   ), as: .psql)
   
-  app.migrations.add(CreateAcronym())
 	app.migrations.add(CreateUser())
+  app.migrations.add(CreateAcronym())
   
   app.logger.logLevel = .debug
   

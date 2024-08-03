@@ -9,6 +9,7 @@ struct UsersController: RouteCollection {
 		usersRoute.post(use: createHandler)
 		usersRoute.get(use: getAllHandler)
 		usersRoute.get(":userID", use: getHandler)
+		usersRoute.get(":userID", "acronyms", use: getAcronymsHandler)
 	}
 	
 	// define the functions
@@ -24,5 +25,13 @@ struct UsersController: RouteCollection {
 	@Sendable func getHandler(_ req: Request) -> EventLoopFuture<User> {
 		User.find(req.parameters.get("userID"), on: req.db)
 			.unwrap(or: Abort(.notFound))
+	}
+	
+	@Sendable func getAcronymsHandler(_ req: Request) -> EventLoopFuture<[Acronym]> {
+		User.find(req.parameters.get("userID"), on: req.db)
+			.unwrap(or: Abort(.notFound))
+			.flatMap { user in
+				user.$acronyms.get(on: req.db)
+			}
 	}
 }

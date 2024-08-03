@@ -11,7 +11,10 @@ struct CreateAcronym: Migration {
         // we define the other 2 columns, mark it as a required string, just like in the model
             .field("short", .string, .required)
             .field("long", .string, .required)
-        // create the table
+			// adds a new column for the User
+						.field("userID", .uuid, .required, .references("users", "id"))
+        
+			// create the table
             .create()
     }
     
