@@ -17,6 +17,7 @@ struct AcronymsController: RouteCollection {
 		acronymsRoutes.get("first", use: getFirstHandler)
 		acronymsRoutes.get("sorted", use: sortedHandler)
 		acronymsRoutes.get(":acronymID", "user", use: getUserHandler)
+		acronymsRoutes.post(":acronymID", "categories", ":categoryID", use: addCategoriesHandler)
 		
 	}
 	
@@ -87,6 +88,23 @@ struct AcronymsController: RouteCollection {
 			.unwrap(or: Abort(.notFound))
 			.flatMap { acronym in
 				acronym.$user.get(on: req.db)
+			}
+	}
+	
+	@Sendable func addCategoriesHandler(_ req: Request) -> EventLoopFuture<HTTPStatus> {
+		// define two props to query the db and get the acronym and category
+		let acronymQuery = Acronym.find(req.parameters.get("acronymID"), on: req.db)
+			.unwrap(or: Abort(.notFound))
+		let categoryQuery = Category.find(req.parameters.get("categoryID"), on: req.db)
+			.unwrap(or: Abort(.notFound))
+		// and(_:) to wait for both futures
+		return acronymQuery.and(categoryQuery)
+			.flatMap { acronym, category in
+				acronym
+					.$categories
+				// sets up the relationship between acronym and category, it creates the pivot model and saves it in the db
+					.attach(category, on: req.db)
+					.transform(to: .created)
 			}
 	}
 	
