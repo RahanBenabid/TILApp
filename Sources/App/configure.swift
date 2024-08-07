@@ -12,7 +12,7 @@ public func configure(_ app: Application) throws {
 		databaseName = "vapor-test"
 		databasePort = 5433
 	} else {
-		databaseName = "vapor-database"
+		databaseName = "vapor_database"
 		databasePort = 5432
 	}
 	
