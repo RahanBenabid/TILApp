@@ -74,6 +74,35 @@ class AcronymDetailTableViewController: UITableViewController {
   // MARK: - Model Loading
 
   func getAcronymData() {
+		// ensures the acronym ID in not null
+		guard let id = acronym.id else {
+			return
+		}
+		
+		// create AcronymRequest to gather infos
+		let acronymDetailRequester = AcronymRequest(acronymID: id)
+		// get the acronym's user
+		acronymDetailRequester.getUser { [weak self] result in
+			switch result {
+				// if success, update the user props
+			case .success(let user):
+				self?.user = user
+			case .failure:
+				let message = "There was an error getting the acronym's user"
+			}
+		}
+		
+		// get the acronym's category
+		acronymDetailRequester.getCategories { [weak self] result in
+			switch result {
+				// if success, update the categories props
+			case .success(let categories):
+				self?.categories = categories
+			case .failure:
+				let message = "There was an error getting the acronym's categories"
+				ErrorPresenter.showError(message: message, on: self)
+			}
+		}
   }
 
   func updateAcronymView() {
