@@ -24,15 +24,19 @@ class SelectUserTableViewController: UITableViewController {
   }
 
   func loadData() {
+		// get the users from the API
     let usersRequest = ResourceRequest<User>(resourcePath: "users")
 
     usersRequest.getAll { [weak self] result in
+			// handles errors and success
       switch result {
+			// show an error, and when the users confirms the click of the alert, go back to the previoud view
       case .failure:
         let message = "There was an error getting the users"
         ErrorPresenter.showError(message: message, on: self) { _ in
           self?.navigationController?.popViewController(animated: true)
         }
+			// in case of success, save the users and reload the table data
       case .success(let users):
         self?.users = users
         DispatchQueue.main.async { [weak self] in
@@ -44,8 +48,10 @@ class SelectUserTableViewController: UITableViewController {
 
   // MARK: - Navigation
   override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+		// verify this is the expected segue
     if segue.identifier == "UnwindSelectUserSegue" {
-      guard
+      // get the index path of the cell that triggered the segue
+			guard
         let cell = sender as? UITableViewCell,
         let indexPath = tableView.indexPath(for: cell)
         else {
