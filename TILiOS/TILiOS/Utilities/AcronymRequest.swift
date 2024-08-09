@@ -115,4 +115,42 @@ struct AcronymRequest {
 		let dataTask = URLSession.shared.dataTask(with: urlRequest)
 		dataTask.resume()
 	}
+	
+	func add(
+		category: Category,
+		completion: @escaping (Result<Void, CategoryAddError>) -> Void) {
+		// Ensure the category has a valid ID
+		guard let categoryID = category.id else {
+			completion(.failure(.noID)) // Return an error if no ID is found
+			return
+		}
+		
+		// Construct the URL for the POST request
+		let url = resource
+			.appendingPathComponent("categories") // Add "categories" to the path
+			.appendingPathComponent("\(categoryID)") // Add the category ID to the path
+		
+		// Create a URLRequest for the specified URL
+		var urlRequest = URLRequest(url: url)
+		urlRequest.httpMethod = "POST" // Set the HTTP method to POST
+		
+		// Create a data task to send the request
+		let dataTask = URLSession.shared
+			.dataTask(with: urlRequest) { _, response, _ in
+				// Ensure the response is valid and has a status code of 201 (Created)
+				guard
+					let httpResponse = response as? HTTPURLResponse,
+					httpResponse.statusCode == 201
+				else {
+					completion(.failure(.invalidResponse)) // Return an error for invalid response
+					return
+				}
+				
+				// If the request is successful, call the completion handler with success
+				completion(.success(()))
+			}
+		
+		// Start the data task
+		dataTask.resume()
+	}
 }
