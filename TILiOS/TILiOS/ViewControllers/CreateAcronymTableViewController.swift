@@ -14,7 +14,16 @@ class CreateAcronymTableViewController: UITableViewController {
 	override func viewDidLoad() {
 		super.viewDidLoad()
 		acronymShortTextField.becomeFirstResponder()
-		populateUsers()
+		if let acronym = acronym {
+			// if the acronym is set, then you're in edit mode, and populate the display field with the correct values and update the view's title
+			acronymShortTextField.text = acronym.short
+			acronymLongTextField.text = acronym.long
+			userLabel.text = selectedUser?.name
+			navigationItem.title = "Edit Acronym"
+		} else {
+			// in create mode, call populateUsers()
+			populateUsers()
+		}
 	}
 	
 	
@@ -94,22 +103,49 @@ class CreateAcronymTableViewController: UITableViewController {
 			userID: userID)
 		let acronymSavedData = acronym.toCreateData()
 		
-		// create a ResourceRequest fot Acronym and calls the save(_:)
-		ResourceRequest<Acronym>(resourcePath: "acronyms")
-			.save(acronymSavedData) { [weak self] result in
-				switch result {
-					// show an error
-				case .failure:
-					let message = "There was a problem saving the acronym"
-					ErrorPresenter.showError(message: message, on: self)
-					// return to the previous view
-				case .success:
-					DispatchQueue.main.async { [weak self] in
-						self?.navigationController?
-							.popViewController(animated: true)
+		// checks if the class's acronym prop is set
+		if self.acronym != nil {
+			// ensure the ID is valid
+			guard let existingID = self.acronym?.id else {
+				let message = "There was an error updating the acronym"
+				ErrorPresenter.showError(message: message, on: self)
+				return
+			}
+			// Creates an AcronymRequest and update()
+			AcronymRequest(acronymID: existingID)
+				.update(with: acronymSavedData) { result in
+					switch result {
+						// in case of failure, display an error
+					case .failure(let failure):
+						let message = "There was a problem saving the acronym"
+						ErrorPresenter.showError(message: message, on: self)
+						// otherwise store the updated acronym, and trigger an unwind segue
+					case .success(let updatedAcronym):
+						DispatchQueue.main.async { [weak self] in
+							self?.performSegue(
+								withIdentifier: "UpdateAcronymDetails",
+								sender: nil)
+						}
 					}
 				}
-			}
+		} else {
+			// create a ResourceRequest fot Acronym and calls the save(_:)
+			ResourceRequest<Acronym>(resourcePath: "acronyms")
+				.save(acronymSavedData) { [weak self] result in
+					switch result {
+						// show an error
+					case .failure:
+						let message = "There was a problem saving the acronym"
+						ErrorPresenter.showError(message: message, on: self)
+						// return to the previous view
+					case .success:
+						DispatchQueue.main.async { [weak self] in
+							self?.navigationController?
+								.popViewController(animated: true)
+						}
+					}
+				}
+		}
 	}
 	
 	@IBAction func updateSelectedUser(_ segue: UIStoryboardSegue) {

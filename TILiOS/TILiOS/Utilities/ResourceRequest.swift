@@ -63,9 +63,12 @@ struct ResourceRequest<ResourceType> where ResourceType: Codable {
     do {
       var urlRequest = URLRequest(url: resourceURL)
       urlRequest.httpMethod = "POST"
-      urlRequest.addValue("application/json", forHTTPHeaderField: "Content-Type")
-      urlRequest.httpBody = try JSONEncoder().encode(saveData)
-      let dataTask = URLSession.shared.dataTask(with: urlRequest) { data, response, _ in
+			urlRequest.httpBody = try JSONEncoder().encode(saveData)
+      urlRequest.addValue(
+				"application/json",
+				forHTTPHeaderField: "Content-Type")
+      let dataTask = URLSession.shared
+				.dataTask(with: urlRequest) { data, response, _ in
         guard
           let httpResponse = response as? HTTPURLResponse,
           httpResponse.statusCode == 200,
