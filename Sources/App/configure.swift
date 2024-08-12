@@ -5,6 +5,11 @@ import Leaf
 
 // configures your application
 public func configure(_ app: Application) throws {
+	// this enables serving files
+	app.middleware.use(
+		FileMiddleware(publicDirectory: app.directory.publicDirectory)
+	)
+	
 	let databaseName: String
 	let databasePort: Int
 	
