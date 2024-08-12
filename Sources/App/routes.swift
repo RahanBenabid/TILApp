@@ -3,10 +3,7 @@ import Vapor
 
 func routes(_ app: Application) throws {
 	
-	app.get("hello") { req async -> String in
-		"Hello, world!"
-	}
-	
+		
 	/// better orgnanise routes
 	
 	// create a new AcronymController
@@ -20,6 +17,10 @@ func routes(_ app: Application) throws {
 	// Register the new controller instance with the router to hook up the routes
 	try app.register(collection: usersController)
 	try app.register(collection: categoriesController)
+  
+  // Leaf
+  let websiteController = WebsiteController()
+  try app.register(collection: websiteController)
 	
 	
 }
