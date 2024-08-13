@@ -1,29 +1,27 @@
 #extend("base"):
 #export("content"):
-<h1>All Users</h1>
-#if(count(users) > 0):
+<h1>All Categories</h1>
+#if(count(categories) > 0):
 <table class="table table-bordered table-hover">
 	<thead class="thead-light">
 		<tr>
-			<th>Username</th>
 			<th>Name</th>
 		</tr>
 	</thead>
 	<tbody>
-		#for(user in users):
+		#for(category in categories):
 		<tr>
 			<td>
-				<a href="/users/#(user.id)">
-					#(user.username)
+				<a href="/categories/#(category.id)">
+				#(category.name)
 				</a>
 			</td>
-			<td>#(user.name)</td>
 		</tr>
 		#endfor
 	</tbody>
 </table>
 #else:
-<h2>There aren’t any users yet!</h2>
+<h2> There aren't any categories yet!</h2>
 #endif
 #endexport
 #endextend
