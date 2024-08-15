@@ -24,7 +24,24 @@
 			#endfor
 		</select>
 	</div>
-	<button type="submit" class="btn btn-primary">
+	
+	<div class="form-group">
+		<label for="categories">Categories</label>
+		<select name="categories[]" class="form-control"
+			id="categories" placeholder="Categories" multiple="multiple">
+			#if(editing):
+			<!-- if the editing flag is set, loop through the array of categories -->
+			#for(category in categories):
+			<!-- this is so that it's pre-populated -->
+			<option value="#(category.name)" selected="selected">
+				#(category.name)
+			</option>
+			#endfor
+			#endif
+		</select>
+	</div>
+	
+	<button type="submit" class="btmenun btn-primary">
 		#if(editing): Update #else: Submit #endif
 	</button>
 </form>
