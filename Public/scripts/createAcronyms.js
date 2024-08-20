@@ -6,7 +6,7 @@ $.ajax({
 }).then(function (response) {
 	var dataToReturn = [];
 	// loops through all the returned categories and turns them into a JSON
-	for (var i=0; i < response.length: i++) {
+	for (var i=0; i < response.length; i++) {
 		var tagToTransform = response[i];
 		new newTag = {
 			id: tagToTransform["name"],
