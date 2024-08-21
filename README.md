@@ -7,7 +7,7 @@ TILApp is just and app i'm using to learn Vapor
 - macOS
 - [Swift 5.3+](https://swift.org/download/)
 - [Vapor 4](https://vapor.codes/)
-- [PostgreSQL](https://www.postgresql.org/) (or any other database supported by Fluent)
+- [PostgreSQL](https://www.postgresql.org/) (or any other database supported by Fluent, in this version i'm using postgres and configuring everything with it)
 
 ## Installation
 
@@ -30,13 +30,10 @@ TILApp is just and app i'm using to learn Vapor
     DATABASE_URL=postgres://username:password@localhost:5432/tilapp
     ```
 
-4. **Run migrations**
-    ```bash
-    vapor run migrate
-    ```
-
 5. **Start the server**
     ```bash
     vapor run serve
     ```
     or just run using Xcode
+    
+    I added some iOS app (that you should run using Xcode separately) and even a web app, in [localhost://127.0.0.1:8080]
