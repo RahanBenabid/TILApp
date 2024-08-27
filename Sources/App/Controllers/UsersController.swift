@@ -13,18 +13,22 @@ struct UsersController: RouteCollection {
 	}
 	
 	// define the functions
-	@Sendable func getAllHandler(_ req: Request) -> EventLoopFuture<[User]> {
-		User.query(on: req.db).all()
+	
+	// now this function will use the extension EventLoopFuture<[User]> for the return type
+	@Sendable func getAllHandler(_ req: Request) -> EventLoopFuture<[User.Public]> {
+		User.query(on: req.db).all().convertToPublic()
 	}
 	
-	@Sendable func createHandler(_ req: Request) throws -> EventLoopFuture<User> {
+	@Sendable func createHandler(_ req: Request) throws -> EventLoopFuture<User.Public> {
 		let user = try req.content.decode(User.self)
-		return user.save(on: req.db).map { user }
+		user.password = try Bcrypt.hash(user.password)
+		return user.save(on: req.db).map { user.convertToPublic() }
 	}
 	
-	@Sendable func getHandler(_ req: Request) -> EventLoopFuture<User> {
+	@Sendable func getHandler(_ req: Request) -> EventLoopFuture<User.Public> {
 		User.find(req.parameters.get("userID"), on: req.db)
 			.unwrap(or: Abort(.notFound))
+			.convertToPublic()
 	}
 	
 	@Sendable func getAcronymsHandler(_ req: Request) -> EventLoopFuture<[Acronym]> {

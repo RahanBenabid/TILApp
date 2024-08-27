@@ -8,7 +8,7 @@ extension User {
 		username: String = "lukes",
 		on database: Database
 	) throws -> User {
-		let user = User(name: name, username: username)
+		let user = User(name: name, username: username, password: "password")
 		try user.save(on: database).wait()
 		return user
 	}

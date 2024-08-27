@@ -37,7 +37,7 @@ final class UserTests: XCTestCase {
 	
 	// test the POST request
 	func testUserCanBeSavedWithAPI() throws {
-		let user = User(name: usersName, username: usersUsername)
+		let user = User(name: usersName, username: usersUsername, password: "password")
 		
 		// we use (_:_:beforeRequest:afterResponse:), we post the user, then check the response
 		try app.test(.POST, usersURI, beforeRequest: { req in
