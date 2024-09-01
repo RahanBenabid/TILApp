@@ -33,11 +33,15 @@ public func configure(_ app: Application) throws {
     database: Environment.get("DATABASE_NAME")
 		?? databaseName
   ), as: .psql)
-  
+	
 	app.migrations.add(CreateUser())
   app.migrations.add(CreateAcronym())
 	app.migrations.add(CreateCategory())
 	app.migrations.add(CreateAcronymCategoryPivot())
+	app.migrations.add(CreateToken())
+	
+	// create an admin
+	app.migrations.add(CreateAdminUser())
   
   app.logger.logLevel = .debug
   

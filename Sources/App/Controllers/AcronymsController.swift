@@ -20,15 +20,32 @@ struct AcronymsController: RouteCollection {
 		acronymsRoutes.get(":acronymID", "categories", use: getCategoriesHandler)
 		acronymsRoutes.delete(":acronymID", "categories", ":categoryID", use: removeCategoriesHandler)
 		
-		// creates an instance of ModelAuthenticator and GuardAuthenticationMiddlware to use basic HTTP auth and checks if the credentials are valid, and then ensures that the request contains an authenticated user
-		let basicAuthMiddleware = User.authenticator()
+		
+		// Create an instance of `Token` authenticator middleware for handling token-based authentication
+		let tokenAuthMiddleware = Token.authenticator()
+		// Create an instance of `User` guard middleware to ensure the user is authenticated
 		let guardAuthMiddleware = User.guardMiddleware()
-		// create a group
-		let protected = acronymsRoutes.grouped(
-			basicAuthMiddleware,
-			guardAuthMiddleware)
-		// connects the create acronym path to createHandler(), through this middleware
-		protected.post(use: createHandler)
+		// Create a route group for `acronymsRoutes` with token authentication and user guard middleware, this means that any routes within this group will require valid token authentication and an authenticated user
+		let tokenAuthGroup = acronymsRoutes.grouped(
+			tokenAuthMiddleware, // Apply token authentication middleware
+			guardAuthMiddleware  // Apply user guard middleware
+		)
+		// Define a POST route within the `tokenAuthGroup` that will use the `createHandler` function, only authenticated requests with a valid token will be able to access this route
+		tokenAuthGroup.post(use: createHandler)
+		
+		// replacement of the other routes
+		tokenAuthGroup.delete(":acronymID", use: deleteHandler)
+		tokenAuthGroup.put(":acronymID", use: updateHandler)
+		tokenAuthGroup.post(
+			":acronymID",
+			"categories",
+			":categoryID",
+			use: addCategoriesHandler)
+		tokenAuthGroup.delete(
+			":acronymID",
+			"categories",
+			":categoryID",
+			use: removeCategoriesHandler)
 	}
 	
 	// define the functions
@@ -38,11 +55,14 @@ struct AcronymsController: RouteCollection {
 	
 	@Sendable func createHandler(_ req: Request) throws -> EventLoopFuture<Acronym> {
 		let data = try req.content.decode(CreateAcronymData.self)
+		// get the authentiated user
+		let user = try req.auth.require(User.self)
 		
-		let acronym = Acronym(
+		let acronym = try Acronym(
 			short: data.short,
 			long: data.long,
-			userID: data.userID)
+			userID: user.requireID())
+		
 		return acronym.save(on: req.db).map { acronym }
 	}
 	
@@ -53,12 +73,16 @@ struct AcronymsController: RouteCollection {
 	
 	@Sendable func updateHandler(_ req: Request) throws -> EventLoopFuture<Acronym> {
 		let updateData = try req.content.decode(CreateAcronymData.self)
+		// get the authenticatd user and get his ID
+		let user = try req.auth.require(User.self)
+		let userID = try user.requireID()
+		
 		return Acronym.find(req.parameters.get("acronymID"), on: req.db)
 			.unwrap(or: Abort(.notFound))
 			.flatMap { acronym in
 				acronym.short = updateData.short
 				acronym.long = updateData.long
-				acronym.$user.id = updateData.userID
+				acronym.$user.id = userID
 				return acronym.save(on: req.db).map {
 					acronym
 				}
@@ -147,6 +171,5 @@ struct AcronymsController: RouteCollection {
 struct CreateAcronymData: Content {
 	let short: String
 	let long: String
-	let userID: UUID
 }
- 
+

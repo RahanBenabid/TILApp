@@ -6,10 +6,22 @@ struct UsersController: RouteCollection {
 		let usersRoute = routes.grouped("api", "users")
 		
 		
-		usersRoute.post(use: createHandler)
 		usersRoute.get(use: getAllHandler)
 		usersRoute.get(":userID", use: getHandler)
 		usersRoute.get(":userID", "acronyms", use: getAcronymsHandler)
+		
+		let basicAuthMiddleware = User.authenticator()
+		let basicAuthGroup = usersRoute.grouped(basicAuthMiddleware)
+		
+		basicAuthGroup.post("login", use: loginHandler)
+		
+		let tokenAuthMiddleware = Token.authenticator()
+		let gaurdAuthMiddleware = User.guardMiddleware()
+		let tokenAuthGroup = usersRoute.grouped(
+			tokenAuthMiddleware,
+			gaurdAuthMiddleware
+		)
+		tokenAuthGroup.post(use: createHandler)
 	}
 	
 	// define the functions
@@ -37,5 +49,16 @@ struct UsersController: RouteCollection {
 			.flatMap { user in
 				user.$acronyms.get(on: req.db)
 			}
+	}
+	
+	@Sendable func loginHandler(_ req: Request) throws -> EventLoopFuture<Token> {
+			// Extract the authenticated user from the request
+			// If the user is not authenticated, this will throw an error
+			let user = try req.auth.require(User.self)
+			// Generate a new token for the authenticated user
+			let token = try Token.generate(for: user)
+			// Save the newly generated token to the database
+			// This returns an EventLoopFuture, which resolves once the token is saved
+			return token.save(on: req.db).map { token }
 	}
 }
