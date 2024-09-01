@@ -70,3 +70,16 @@ extension EventLoopFuture where Value == Array<User> {
 		return self.map { $0.convertToPublic() }
 	}
 }
+
+// The ModelAuthenticable will allow Fluent models to use the HTTP Auth
+extension User: ModelAuthenticatable {
+	
+	// tells fluents the username and password path
+	static let usernameKey = \User.$username
+	static let passwordHashKey = \User.$password
+	
+	// very the hash here (you hash the input password and compare the result with the db hash)
+	func verify(password: String) throws -> Bool {
+		try Bcrypt.verify(password, created: self.password)
+	}
+}

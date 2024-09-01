@@ -9,7 +9,6 @@ struct AcronymsController: RouteCollection {
 		
 		// registering the routes handlers
 		acronymsRoutes.get(use: getAllHandler)
-		acronymsRoutes.post(use: createHandler)
 		acronymsRoutes.get(":acronymID", use: getHandler)
 		acronymsRoutes.put(":acronymID", use: updateHandler)
 		acronymsRoutes.delete(":acronymID", use: deleteHandler)
@@ -21,6 +20,15 @@ struct AcronymsController: RouteCollection {
 		acronymsRoutes.get(":acronymID", "categories", use: getCategoriesHandler)
 		acronymsRoutes.delete(":acronymID", "categories", ":categoryID", use: removeCategoriesHandler)
 		
+		// creates an instance of ModelAuthenticator and GuardAuthenticationMiddlware to use basic HTTP auth and checks if the credentials are valid, and then ensures that the request contains an authenticated user
+		let basicAuthMiddleware = User.authenticator()
+		let guardAuthMiddleware = User.guardMiddleware()
+		// create a group
+		let protected = acronymsRoutes.grouped(
+			basicAuthMiddleware,
+			guardAuthMiddleware)
+		// connects the create acronym path to createHandler(), through this middleware
+		protected.post(use: createHandler)
 	}
 	
 	// define the functions
