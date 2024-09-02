@@ -29,24 +29,33 @@ final class AcronymTests: XCTestCase {
 	}
 	
 	func testAcronymCanBeSavedWithAPI() throws {
+		let user = try User.create(on: app.db)
 		let createAcronymData = CreateAcronymData(short: acronymShort, long: acronymLong)
 		
-		try app.test(.POST, acronymsURI, beforeRequest: { request in
-			try request.content.encode(createAcronymData)
-		}, afterResponse: { response in
-			let receivedAcronym = try response.content.decode(Acronym.self)
-			XCTAssertEqual(receivedAcronym.short, acronymShort)
-			XCTAssertEqual(receivedAcronym.long, acronymLong)
-			XCTAssertNotNil(receivedAcronym.id)
-			
-			try app.test(.GET, acronymsURI, afterResponse: { allAcronymsResponse in
-				let acronyms = try allAcronymsResponse.content.decode([Acronym].self)
-				XCTAssertEqual(acronyms.count, 1)
-				XCTAssertEqual(acronyms[0].short, acronymShort)
-				XCTAssertEqual(acronyms[0].long, acronymLong)
-				XCTAssertEqual(acronyms[0].id, receivedAcronym.id)
+		try app.test(
+			.POST,
+			acronymsURI,
+			loggedInUser: user,
+			beforeRequest: { request in
+				try request.content.encode(createAcronymData)
+			},
+			afterResponse: { response in
+				let receivedAcronym = try response.content.decode(Acronym.self)
+				XCTAssertEqual(receivedAcronym.short, acronymShort)
+				XCTAssertEqual(receivedAcronym.long, acronymLong)
+				XCTAssertNotNil(receivedAcronym.id)
+				XCTAssertEqual(receivedAcronym.$user.id, user.id)
+				
+				try app.test(.GET, acronymsURI,
+										 afterResponse: { allAcronymsResponse in
+					let acronyms = try allAcronymsResponse.content.decode([Acronym].self)
+					XCTAssertEqual(acronyms.count, 1)
+					XCTAssertEqual(acronyms[0].short, acronymShort)
+					XCTAssertEqual(acronyms[0].long, acronymLong)
+					XCTAssertEqual(acronyms[0].id, receivedAcronym.id)
+					XCTAssertEqual(acronyms[0].$user.id, user.id)
+				})
 			})
-		})
 	}
 	
 	func testGettingASingleAcronymFromTheAPI() throws {
@@ -66,7 +75,10 @@ final class AcronymTests: XCTestCase {
 		let newLong = "Oh My Gosh"
 		let updatedAcronymData = CreateAcronymData(short: acronymShort, long: acronymLong)
 		
-		try app.test(.PUT, "\(acronymsURI)\(acronym.id!)", beforeRequest: { request in
+		try app.test(.PUT,
+								 "\(acronymsURI)\(acronym.id!)",
+								 loggedInUser: newUser,
+								 beforeRequest: { request in
 			try request.content.encode(updatedAcronymData)
 		})
 		
@@ -86,7 +98,10 @@ final class AcronymTests: XCTestCase {
 			XCTAssertEqual(acronyms.count, 1)
 		})
 		
-		try app.test(.DELETE, "\(acronymsURI)\(acronym.id!)")
+		try app.test(
+			.DELETE,
+			"\(acronymsURI)\(acronym.id!)",
+			loggedInRequest: true)
 		
 		try app.test(.GET, acronymsURI, afterResponse: { response in
 			let newAcronyms = try response.content.decode([Acronym].self)
@@ -149,7 +164,7 @@ final class AcronymTests: XCTestCase {
 		let acronym = try Acronym.create(user: user, on: app.db)
 		
 		try app.test(.GET, "\(acronymsURI)\(acronym.id!)/user", afterResponse: { response in
-			let acronymsUser = try response.content.decode(User.self)
+			let acronymsUser = try response.content.decode(User.Public.self)
 			XCTAssertEqual(acronymsUser.id, user.id)
 			XCTAssertEqual(acronymsUser.name, user.name)
 			XCTAssertEqual(acronymsUser.username, user.username)
@@ -161,8 +176,14 @@ final class AcronymTests: XCTestCase {
 		let category2 = try Category.create(name: "Funny", on: app.db)
 		let acronym = try Acronym.create(on: app.db)
 		
-		try app.test(.POST, "\(acronymsURI)\(acronym.id!)/categories/\(category.id!)")
-		try app.test(.POST, "\(acronymsURI)\(acronym.id!)/categories/\(category2.id!)")
+		try app.test(
+			.POST,
+			"\(acronymsURI)\(acronym.id!)/categories/\(category.id!)",
+			loggedInRequest: true)
+		try app.test(
+			.POST,
+			"\(acronymsURI)\(acronym.id!)/categories/\(category2.id!)",
+			loggedInRequest: true)
 		
 		try app.test(.GET, "\(acronymsURI)\(acronym.id!)/categories", afterResponse: { response in
 			let categories = try response.content.decode([App.Category].self)
@@ -173,7 +194,10 @@ final class AcronymTests: XCTestCase {
 			XCTAssertEqual(categories[1].name, category2.name)
 		})
 		
-		try app.test(.DELETE, "\(acronymsURI)\(acronym.id!)/categories/\(category.id!)")
+		try app.test(
+			.DELETE,
+			"\(acronymsURI)\(acronym.id!)/categories/\(category.id!)",
+			loggedInRequest: true)
 		
 		try app.test(.GET, "\(acronymsURI)\(acronym.id!)/categories", afterResponse: { response in
 			let newCategories = try response.content.decode([App.Category].self)

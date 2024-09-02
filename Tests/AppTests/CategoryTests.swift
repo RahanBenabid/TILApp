@@ -63,8 +63,15 @@ final class CategoryTests: XCTestCase {
 		
 		let category = try Category.create(name: categoryName, on: app.db)
 		
-		try app.test(.POST, "/api/acronyms/\(acronym.id!)/categories/\(category.id!)")
-		try app.test(.POST, "/api/acronyms/\(acronym2.id!)/categories/\(category.id!)")
+		try app.test(
+			.POST,
+			"/api/acronyms/\(acronym.id!)/categories/\(category.id!)"
+			,
+			loggedInRequest: true)
+		try app.test(
+			.POST,
+			"/api/acronyms/\(acronym2.id!)/categories/\(category.id!)",
+			loggedInRequest: true)
 		
 		try app.test(.GET, "\(categoriesURI)\(category.id!)/acronyms", afterResponse: { response in
 			let acronyms = try response.content.decode([Acronym].self)
