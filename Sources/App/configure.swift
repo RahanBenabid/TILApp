@@ -5,10 +5,11 @@ import Leaf
 
 // configures your application
 public func configure(_ app: Application) throws {
+	
 	// this enables serving files
-	app.middleware.use(
-		FileMiddleware(publicDirectory: app.directory.publicDirectory)
-	)
+	app.middleware.use(FileMiddleware(publicDirectory: app.directory.publicDirectory))
+	// using the session middleware, as a global middleware
+	app.middleware.use(app.sessions.middleware)
 	
 	let databaseName: String
 	let databasePort: Int

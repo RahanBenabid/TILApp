@@ -83,3 +83,8 @@ extension User: ModelAuthenticatable {
 		try Bcrypt.verify(password, created: self.password)
 	}
 }
+
+// conform user to ModelSessionAuthenticatable to be able to save and retreive user as part of the session
+extension User: ModelSessionAuthenticatable {}
+// allows vapor to authenticate users with a username and password when they login, already implemented so nothing to ædd here
+extension User: ModelCredentialsAuthenticatable {}

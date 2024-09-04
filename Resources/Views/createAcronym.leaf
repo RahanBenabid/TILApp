@@ -7,24 +7,14 @@
 		<input type="text" name="short" class="form-control"
 		id="short" #if(editing): value="#(acronym.short)" #endif/>
 	</div>
+
 	<div class="form-group">
 		<label for="long">Meaning</label>
 		<input type="text" name="long" class="form-control"
 		id="long" #if(editing): value="#(acronym.long)" #endif/>
 	</div>
-	<div class="form-group">
-		<label for="userID">User</label>
-		<select name="userID" class="form-control" id="userID">
-			#for(user in users):
-			<option value="#(user.id)"
-				#if(editing): #if(acronym.user.id == user.id):
-				selected #endif #endif>
-				#(user.name)
-			</option>
-			#endfor
-		</select>
-	</div>
-	
+
+
 	<div class="form-group">
 		<label for="categories">Categories</label>
 		<select name="categories[]" class="form-control"
@@ -40,7 +30,7 @@
 			#endif
 		</select>
 	</div>
-	
+
 	<button type="submit" class="btmenun btn-primary">
 		#if(editing): Update #else: Submit #endif
 	</button>
