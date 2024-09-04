@@ -29,10 +29,12 @@ struct WebsiteController: RouteCollection {
 		Acronym.query(on: req.db).all().flatMap { acronyms in
 			// create an Encodable IndexTitle containing the title we want
 			let userLoggedIn = req.auth.has(User.self)
+			let showCookieMessage = req.cookies["cookies-accepted"] == nil
 			let context = IndexContext(
 				title: "Home page",
 				acronyms: acronyms,
-				userLoggedIn: userLoggedIn)
+				userLoggedIn: userLoggedIn,
+				showCookieMessage: showCookieMessage)
 			// pass it as a second parameter
 			return req.view.render("index", context)
 		}
@@ -256,6 +258,7 @@ struct IndexContext: Encodable {
 	let title: String
 	let acronyms: [Acronym]
 	let userLoggedIn: Bool
+	let showCookieMessage: Bool
 }
 
 struct AcronymContext: Encodable {
