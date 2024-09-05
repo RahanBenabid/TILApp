@@ -10,7 +10,7 @@ struct WebsiteController: RouteCollection {
 		let credentialsRoutes = authSessionsRoutes.grouped(User.credentialsAuthenticator())
 		credentialsRoutes.post("login", use: loginPostHandler)
 		authSessionsRoutes.get(use: indexHandler)
-		authSessionsRoutes.get("acronyms", "acronymID", use: acronymHandler)
+		authSessionsRoutes.get("acronyms", ":acronymID", use: acronymHandler)
 		authSessionsRoutes.get("users", ":userID", use: userHandler)
 		authSessionsRoutes.get("users", use: allUserHandler)
 		authSessionsRoutes.get("categories", use: allCategoriesHandler)
@@ -102,7 +102,10 @@ struct WebsiteController: RouteCollection {
 	
 	@Sendable func createAcronymHandler(_ req: Request) -> EventLoopFuture<View> {
 		User.query(on: req.db).all().flatMap { users in
-			let context = CreateAcronymContext()
+			let token = [UInt8].random(count: 16).base64
+			print("\n\n token: ", token, "\n\n")
+			let context = CreateAcronymContext(csrfToken: token)
+			req.session.data["CSRF_TOKEN"] = token
 			return req.view.render("createAcronym", context)
 		}
 	}
@@ -110,6 +113,15 @@ struct WebsiteController: RouteCollection {
 	@Sendable func createAcronymPostHandler(_ req: Request) throws -> EventLoopFuture<Response> {
 		let data = try req.content.decode(CreateAcronymFormData.self)
 		let user = try req.auth.require(User.self)
+		let expectedToken = req.session.data["CSRF_TOKEN"]
+		req.session.data["CSRF_TOKEN"] = nil
+		guard
+			let csrfToken = data.csrfToken,
+			expectedToken == csrfToken
+		else {
+			throw Abort(.badRequest)
+		}
+		print("\n\n authentication succeeded using: ", csrfToken, "\n\n")
 		let acronym = try Acronym(
 			short: data.short,
 			long: data.long,
@@ -292,6 +304,8 @@ struct CategoryContext: Encodable {
 
 struct CreateAcronymContext: Encodable {
 	let title = "Create an acronym" // static because the title doesn't change
+	// for session
+	let csrfToken: String
 }
 
 struct EditAcronymContext: Encodable {
@@ -305,6 +319,7 @@ struct CreateAcronymFormData: Content {
 	let short: String
 	let long: String
 	let categories: [String]?
+	let csrfToken: String?
 }
 
 struct LoginContext: Encodable {
