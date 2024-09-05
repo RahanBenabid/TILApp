@@ -16,6 +16,8 @@ struct WebsiteController: RouteCollection {
 		authSessionsRoutes.get("categories", use: allCategoriesHandler)
 		authSessionsRoutes.get("categories", ":categoryID", use: categoryHandler)
 		authSessionsRoutes.post("logout", use: logoutHandler)
+		authSessionsRoutes.get("register", use: registerHandler)
+		authSessionsRoutes.post("register", use: registerPostHandler)
 		
 		let protectedRoutes = authSessionsRoutes.grouped(User.redirectMiddleware(path: "/login"))
 		protectedRoutes.get("acronyms", "create", use: createAcronymHandler)
@@ -263,7 +265,28 @@ struct WebsiteController: RouteCollection {
 		return req.redirect(to: "/")
 	}
 	
-	// end of WebsiteController function
+	@Sendable func registerHandler(_ req: Request) -> EventLoopFuture<View> {
+		let context = RegisterContext()
+		return req.view.render("register", context)
+	}
+	
+	@Sendable func registerPostHandler(_ req: Request) throws -> EventLoopFuture<Response> {
+		let data = try req.content.decode(RegisterData.self)
+		let password = try Bcrypt.hash(data.password)
+		let user = User(
+			name: data.name,
+			username: data.username,
+			password: password)
+		return user.save(on: req.db).map {
+			req.auth.login(user)
+			return req.redirect(to: "/")
+		}
+	}
+	
+	// end of WebsiteController function ( ͡❛ ᴗ ͡❛)( ͡❛ ᴗ ͡❛)( ͡❛ ᴗ ͡❛)
+	// ( ͡❛ ᴗ ͡❛)( ͡❛ ᴗ ͡❛)( ͡❛ ᴗ ͡❛)( ͡❛ ᴗ ͡❛)( ͡❛ ᴗ ͡❛)( ͡❛ ᴗ ͡❛)( ͡❛ ᴗ ͡❛)( ͡❛ ᴗ ͡❛)( ͡❛ ᴗ ͡❛)
+	// ( ͡❛ ᴗ ͡❛)( ͡❛ ᴗ ͡❛)( ͡❛ ᴗ ͡❛)
+	// doing this to be able to locate the end of the function cuz the function is so damn big
 }
 
 struct IndexContext: Encodable {
@@ -329,4 +352,15 @@ struct LoginContext: Encodable {
 	init(loginError: Bool = false) {
 		self.loginError = loginError
 	}
+}
+
+struct RegisterContext: Encodable {
+	let title = "Register"
+}
+
+struct RegisterData: Content {
+	let name: String
+	let username: String
+	let password: String
+	let confirmPassword: String
 }

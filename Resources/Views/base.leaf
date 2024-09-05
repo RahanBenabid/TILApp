@@ -40,6 +40,11 @@
             Create An Acronym
           </a>
         </li>
+        #if(!userLoggedIn):
+          <li class="nav-item #if(title == "Register"): active #endif">
+            <a href="/register" class="nav-link">Register</a>
+          </li>
+        #endif
       </ul>
       #if(userLoggedIn):
         <form class="form-inline" action="/logout" method="POST">
@@ -54,19 +59,15 @@
     #import("content")
   </div>
 
-  <!-- 1 -->
   #if(showCookieMessage):
-    <!-- 2 -->
     <footer id="cookie-footer">
       <div id="cookieMessage" class="container">
         <span class="muted">
-          <!-- 3 -->
           This site uses cookies! To accept this, click
           <a href="#" onclick="cookiesConfirmed()">OK</a>
         </span>
       </div>
     </footer>
-    <!-- 4 -->
     <script src="/scripts/cookies.js"></script>
   #endif
 
