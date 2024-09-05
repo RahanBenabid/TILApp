@@ -1,6 +1,12 @@
 #extend("base"):
   #export("content"):
     <h1>#(title)</h1>
+    #if(message):
+      <div class="alert alert-danger" role="alert">
+        Please fix the following errors: <br />
+        #(message)
+      </div>
+    #endif
     <form method="post">
       <div class="form-group">
       <label for="name">Name</label>
