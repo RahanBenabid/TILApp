@@ -22,5 +22,7 @@ func routes(_ app: Application) throws {
   let websiteController = WebsiteController()
   try app.register(collection: websiteController)
 	
-	
+	//imperial
+	let imperialController = ImperialController()
+	try app.register(collection: imperialController)
 }
