@@ -13,6 +13,7 @@ struct ImperialController: RouteCollection {
 			callback: googleCallbackURL,
 			scope: ["profile", "email"],
 			completion: processGoogleLogin)
+		routes.get("iOS", "login-google", use: iOSGoogleLogin)
 	}
 	
 	
@@ -35,16 +36,42 @@ struct ImperialController: RouteCollection {
 								password: UUID().uuidString)
 							return user
 								.save(on: request.db)
-								.map {
+								.flatMap {
 									request.session.authenticate(user)
-									return request.redirect(to: "/")
+									return generateRedirect(on: request, for: user)
 								}
 						}
 						// if he does, authenticate him and redirect to the login page
 						request.session.authenticate(existingUser)
-						return request.eventLoop.future(request.redirect(to: "/"))
-					}
+						return generateRedirect(on: request, for: existingUser)					}
 			}
+	}
+	
+	/// now for the iOS part
+	
+	@Sendable func iOSGoogleLogin(_ req: Request) -> Response {
+		req.session.data["oauth_login"] = "iOS"
+		return req.redirect(to: "/login-google")
+	}
+	
+	@Sendable func generateRedirect(on req: Request, for user: User) -> EventLoopFuture<ResponseEncodable> {
+		let redirectURL: EventLoopFuture<String>
+		if req.session.data["ouath_login"] == "iOS" {
+			do {
+				let token = try Token.generate(for: user)
+				redirectURL = token.save(on: req.db).map {
+					"tilapp://auth?token=\(token.value)"
+				}
+			} catch {
+				return req.eventLoop.future(error: error)
+			}
+		} else {
+			redirectURL = req.eventLoop.future("/")
+		}
+		req.session.data["oauth_login"] = nil
+		return redirectURL.map { url in
+			req.redirect(to: url)
+		}
 	}
 }
 
