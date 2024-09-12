@@ -1,10 +1,7 @@
-<!-- 1 -->
 #extend("base"):
   #export("content"):
-    <!-- 2 -->
     <h1>#(title)</h1>
 
-    <!-- 3 -->
     #if(loginError):
       <div class="alert alert-danger" role="alert">
         User authentication error. Either your username or
@@ -25,7 +22,6 @@
         class="form-control" id="password"/>
       </div>
 
-      <!-- 7 -->
       <button type="submit" class="btn btn-primary">
         Log In
       </button>
@@ -33,5 +29,8 @@
     <a href="/login-google">
       <img class="mt-3" src="/images/sign-in-with-google.png" alt="Sign In With Google">
     </a>
+		<a href="/login-github">
+			<img class="mt-3" src="/images/sign-in-with-github.png" alt="Sign In With GitHub">
+		</a>
   #endexport
 #endextend

@@ -27,6 +27,7 @@ let package = Package(
 				.product(name: "FluentPostgresDriver", package: "fluent-postgres-driver"),
         .product(name: "Leaf", package: "leaf"),
 				.product(name: "ImperialGoogle", package: "Imperial"),
+				.product(name: "ImperialGitHub", package: "Imperial"),
 				.product(name: "Vapor", package: "vapor"),
 				.product(name: "NIOCore", package: "swift-nio"),
 				.product(name: "NIOPosix", package: "swift-nio"),
