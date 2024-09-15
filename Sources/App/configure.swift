@@ -42,6 +42,7 @@ public func configure(_ app: Application) throws {
 	app.migrations.add(CreateCategory())
 	app.migrations.add(CreateAcronymCategoryPivot())
 	app.migrations.add(CreateToken())
+	app.migrations.add(CreateResetPasswordToken())
 	
 	// create an admin
 	app.migrations.add(CreateAdminUser())
