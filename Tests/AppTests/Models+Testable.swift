@@ -1,129 +1,92 @@
+/// Copyright (c) 2021 Razeware LLC
+///
+/// Permission is hereby granted, free of charge, to any person obtaining a copy
+/// of this software and associated documentation files (the "Software"), to deal
+/// in the Software without restriction, including without limitation the rights
+/// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+/// copies of the Software, and to permit persons to whom the Software is
+/// furnished to do so, subject to the following conditions:
+///
+/// The above copyright notice and this permission notice shall be included in
+/// all copies or substantial portions of the Software.
+///
+/// Notwithstanding the foregoing, you may not use, copy, modify, merge, publish,
+/// distribute, sublicense, create a derivative work, and/or sell copies of the
+/// Software in any work that is designed, intended, or marketed for pedagogical or
+/// instructional purposes related to programming, coding, application development,
+/// or information technology.  Permission for such use, copying, modification,
+/// merger, publication, distribution, sublicensing, creation of derivative works,
+/// or sale is expressly withheld.
+///
+/// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+/// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+/// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+/// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+/// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+/// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+/// THE SOFTWARE.
+
 @testable import App
-@testable import XCTVapor
 import Fluent
-// to be able to see the Bcrypt function
 import Vapor
 
-// a function that saves a user, with a default value, so no need to be obliged to provide one
 extension User {
-	// the username is optional in case it's already supplied, if not create one using UUID, to make sure it's unique
-	static func create(
-		name: String = "Luke",
-		username: String? = nil,
-		on database: Database
-	) throws -> User {
-		let createUsername: String
-		if let suppliedUsername = username {
-			createUsername = suppliedUsername
-		} else {
-			createUsername = UUID().uuidString
-		}
-		
-		// hash the password then create a user
-		let password = try Bcrypt.hash("password")
-		let user = User(name: name,
-										username: createUsername,
-										password: "password")
-		try user.save(on: database).wait()
-		return user
-	}
+  // 1
+  static func create(
+    name: String = "Luke",
+    username: String? = nil,
+    on database: Database
+  ) throws -> User {
+    let createUsername: String
+    // 2
+    if let suppliedUsername = username {
+      createUsername = suppliedUsername
+    // 3
+    } else {
+      createUsername = UUID().uuidString
+    }
+
+    // 4
+    let password = try Bcrypt.hash("password")
+    let user = User(
+      name: name,
+      username: createUsername,
+      password: password,
+      email: "\(createUsername)@test.com")
+    try user.save(on: database).wait()
+    return user
+  }
 }
 
 extension Acronym {
-	static func create(
-		short: String = "TIL",
-		long: String = "Today I Learned",
-		user: User? = nil,
-		on database: Database
-	) throws -> Acronym {
-		var acronymUser = user
-		
-		if acronymUser == nil {
-			acronymUser = try User.create(on: database)
-		}
-		
-		let acronym = Acronym(short: short, long: long, userID: acronymUser!.id!)
-		try acronym.save(on: database).wait()
-		return acronym
-	}
+  static func create(
+    short: String = "TIL",
+    long: String = "Today I Learned",
+    user: User? = nil,
+    on database: Database
+  ) throws -> Acronym {
+    var acronymsUser = user
+    
+    if acronymsUser == nil {
+      acronymsUser = try User.create(on: database)
+    }
+    
+    let acronym = Acronym(
+      short: short,
+      long: long,
+      userID: acronymsUser!.id!)
+    try acronym.save(on: database).wait()
+    return acronym
+  }
 }
 
 extension App.Category {
-	static func create(
-		name: String = "Random",
-		on database: Database
-	) throws -> App.Category {
-		let category = Category(name: name)
-		try category.save(on: database).wait()
-		return category
-	}
-}
-
-extension XCTApplicationTester {
-	// perform a login operation using the provided User object and returns a Token.
-	public func login(
-		user: User
-	) throws -> Token {
-		// Create an HTTP POST request to the "/api/users/login" endpoint.
-		var request = XCTHTTPRequest(
-			method: .POST,
-			url: .init(path: "/api/users/login"),
-			headers: [:],
-			// Initialize an empty request body using ByteBufferAllocator.
-			body: ByteBufferAllocator().buffer(capacity: 0)
-		)
-		// Add basic authentication to the request headers using the user's username and password.
-		request.headers.basicAuthorization =
-			.init(username: user.username, password: "password")
-		// Perform the request and capture the response.
-		let response = try performTest(request: request)
-		// Decode the response content into a Token object and return it.
-		return try response.content.decode(Token.self)
-	}
-	
-	@discardableResult
-	public func test(
-	_ method: HTTPMethod,
-	_ path: String,
-	headers: HTTPHeaders = [:],
-	body: ByteBuffer? = nil,
-	loggedInRequest: Bool = false,
-	loggedInUser: User? = nil,
-	file: StaticString = #file,
-	line: UInt = #line,
-	beforeRequest: (inout XCTHTTPRequest) throws -> () = { _ in },
-	afterResponse: (XCTHTTPResponse) throws -> () = { _ in }
-	) throws -> XCTApplicationTester {
-		var request = XCTHTTPRequest(
-			method: method,
-			url: .init(path: path),
-			headers: headers,
-			body: body ?? ByteBufferAllocator().buffer(capacity: 0)
-		)
-		
-		if (loggedInRequest || loggedInUser != nil) {
-			let userToLogin: User
-			if let user = loggedInUser {
-				userToLogin = user
-			} else {
-				userToLogin = User(
-					name: "Admin",
-					username: "admin",
-					password: "password")
-			}
-			let token = try login(user: userToLogin)
-			request.headers.bearerAuthorization = .init(token: token.value)
-		}
-		
-		try beforeRequest(&request)
-		
-		do {
-			let response = try performTest(request: request)
-			try afterResponse(response)
-		} catch {
-			XCTFail("\(error)", file: (file), line: line)
-			throw error
-		}
-		return self
-	}
+  static func create(
+    name: String = "Random",
+    on database: Database
+  ) throws -> App.Category {
+    let category = Category(name: name)
+    try category.save(on: database).wait()
+    return category
+  }
 }

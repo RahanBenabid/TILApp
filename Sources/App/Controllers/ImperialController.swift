@@ -25,6 +25,7 @@ struct ImperialController: RouteCollection {
 			from: GitHub.self,
 			authenticate: "login-github",
 			callback: githubCallbackURL,
+			scope: ["user:email"],
 			completion: processGitHubLogin)
 		
 		// iOS
@@ -49,7 +50,8 @@ struct ImperialController: RouteCollection {
 							let user = User(
 								name: userInfo.name,
 								username: userInfo.email,
-								password: UUID().uuidString)
+								password: UUID().uuidString,
+								email: userInfo.email)
 							return user
 								.save(on: request.db)
 								.flatMap {
@@ -67,7 +69,8 @@ struct ImperialController: RouteCollection {
 	@Sendable func processGitHubLogin(request: Request, token: String) throws -> EventLoopFuture<ResponseEncodable> {
 		return try GitHub
 			.getUser(on: request)
-			.flatMap { userInfo in
+			.and(GitHub.getEmail(on: request))
+			.flatMap { userInfo, emailInfo in
 				User
 					.query(on: request.db)
 					.filter(\.$username == userInfo.login)
@@ -77,7 +80,8 @@ struct ImperialController: RouteCollection {
 							let user = User(
 								name: userInfo.name,
 								username: userInfo.login,
-								password: UUID().uuidString)
+								password: UUID().uuidString,
+								email: emailInfo[0].email)
 							return user
 								.save(on: request.db)
 								.flatMap {
@@ -165,6 +169,10 @@ struct GithubUserInfo: Content {
 	let login: String
 }
 
+struct GitHubEmailInfo: Content {
+	let email: String
+}
+
 extension GitHub {
 	// Fetch user info from GitHub API, returning GithubUserInfo
 	static func getUser(on request: Request) throws -> EventLoopFuture<GithubUserInfo> {
@@ -192,6 +200,24 @@ extension GitHub {
 				}
 				// Decode response to GithubUserInfo
 				return try response.content.decode(GithubUserInfo.self)
+			}
+	}
+	
+	static func getEmail(on request: Request) throws -> EventLoopFuture<[GitHubEmailInfo]> {
+		var headers = HTTPHeaders()
+		try headers.add(name: .authorization, value: "token \(request.accessToken())")
+		headers.add(name: .userAgent, value: "vapor")
+		let githubUserAPITURL: URI = "https://api.github.com/emails"
+		return request.client.get(githubUserAPITURL, headers: headers)
+			.flatMapThrowing { response in
+				guard response.status == .ok else {
+					if response.status == .unauthorized {
+						throw Abort.redirect(to: "/login-github")
+					} else {
+						throw Abort(.internalServerError)
+					}
+				}
+				return try response.content.decode([GitHubEmailInfo].self)
 			}
 	}
 }

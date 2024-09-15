@@ -19,12 +19,16 @@ final class User: Model {
 	@Children(for: \.$user)
 	var acronyms: [Acronym]
 	
+	@Field(key: "email")
+	var email: String
+	
 	init() {}
 	
-  init(id: UUID? = nil, name: String, username: String, password: String) {
+	init(id: UUID? = nil, name: String, username: String, password: String, email: String) {
 		self.name = name
 		self.username = username
     self.password = password
+		self.email = email
 	}
 	
 	final class Public: Content {
