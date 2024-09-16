@@ -1,6 +1,27 @@
 ## Introduction
 
-TILApp is just and app i'm using to learn Vapor
+TILApp is a mainly backend app I'm using to learn backend using *Vapor*, the swift backend framework, I try to include as many functionalities as i possibly can, such as:
+- hashing the passwords for a more secure database
+- Google OAuth
+- GitHub OAuth
+- Apple Authentication (does not work because I don't have a paid Apple dev account, but the work was implemented in a seperate branch called *SIWA*)
+- Password Reset using the email, also doesn't work, I'm using SendGrid, and had issues creating an account, here is the `.env` file template
+
+  ```.env
+  GOOGLE_CALLBACK_URL=http://127.0.0.1:8080/oauth/google
+  GOOGLE_CLIENT_ID=<YOUR_GOOGLE_CLIENT_ID>
+  GOOGLE_CLIENT_SECRET=<YOUR_GOOGLE_CLIENT_SECRET>
+
+  GITHUB_CALLBACK_URL=http://127.0.0.1:8080/oauth/github
+  GITHUB_CLIENT_ID=<YOUR_GITHUB_CLIENT_ID>
+  GITHUB_CLIENT_SECRET=<YOUR_GITHUB_CLIENT_SECRET>
+
+  IOS_APPLICATION_IDENTIFIER=com.example.appname
+  SIWA_REDIRECT_URL=https://<YOUR_NGROK_DOMAIN>/login/siwa/callback
+
+  SENDGRID_API_KEY=<YOUR_API_KEY>
+  ```
+- some other minor stuff not worth mentioning but that help with the UX
 
 ## Requirements
 
@@ -24,16 +45,19 @@ TILApp is just and app i'm using to learn Vapor
     ```
     on mac just open the folder using Xcode, it will download all the dependencies
 
-3. **Configure environment variables**
-    Create a `.env` file in the root directory and add your database configuration:
-    ```plaintext
-    DATABASE_URL=postgres://username:password@localhost:5432/tilapp
-    ```
-
-5. **Start the server**
+3. **Start the server**
     ```bash
     vapor run serve
     ```
-    or just run using Xcode
-    
-    I added some iOS app (that you should run using Xcode separately) and even a web app, in [localhost://127.0.0.1:8080]
+
+Or just skip all this if you're on mac using Xcode, open the project, wait for the Dependencies to download, create a docker container, and run, here's the docker container command:
+
+```bash
+docker rm -f postgres
+docker run --name postgres \
+  -e POSTGRES_DB=vapor_database \
+  -e POSTGRES_USER=vapor_username \
+  -e POSTGRES_PASSWORD=vapor_password \
+  -p 5432:5432 -d postgres
+```
+run as such, don't replace anything unless you know what you're doing
