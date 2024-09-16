@@ -8,8 +8,8 @@ TILApp is a backend-focused application developed to explore and learn the Vapor
 
 - **Secure Password Hashing**: Implemented for enhanced database security.
 - **OAuth Integration**:
-	  - Google OAuth
-	  - GitHub OAuth
+	- Google OAuth
+	- GitHub OAuth
 - **Apple Authentication**: Implemented in a separate branch (`SIWA`) but currently inactive due to Apple Developer account limitations.
 - **Password Reset via Email**: Functionality in place, but inactive due to SendGrid account setup issues.
 - **Additional UX Enhancements**: Various minor features to improve user experience.
