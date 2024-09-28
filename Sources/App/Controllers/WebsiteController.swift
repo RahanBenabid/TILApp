@@ -3,6 +3,7 @@ import Leaf
 import SendGrid
 
 struct WebsiteController: RouteCollection {
+	let imageFolder = "ProfilePictures/"
 	func boot(routes: RoutesBuilder) throws {
 		// we use this to make the user available for these pages
 		let authSessionsRoutes = routes.grouped(User.sessionAuthenticator())
@@ -23,6 +24,7 @@ struct WebsiteController: RouteCollection {
 		authSessionsRoutes.post("forgottenPassword", use: forgottenPasswordPostHandler)
 		authSessionsRoutes.get("resetPassword", use: resetPasswordHandler)
 		authSessionsRoutes.post("resetPassword", use: resetPasswordPostHandler)
+		authSessionsRoutes.get("users", ":userID", "profilePicture", use: getUsersProfilePictureHandler)
 		
 		let protectedRoutes = authSessionsRoutes.grouped(User.redirectMiddleware(path: "/login"))
 		protectedRoutes.get("acronyms", "create", use: createAcronymHandler)
@@ -30,6 +32,8 @@ struct WebsiteController: RouteCollection {
 		protectedRoutes.get("acronyms", ":acronymID", "edit", use: editAcronymHandler)
 		protectedRoutes.post("acronyms", ":acronymID", "edit", use: editAcronymPostHandler)
 		protectedRoutes.post("acronyms", ":acronymID", "delete", use: deleteAcronymHandler)
+		protectedRoutes.get("users", ":userID", "addProfilePicture", use: addProfilePictureHandler)
+		protectedRoutes.on(.POST, "users", ":userID", "addProfilePicture", body: .collect(maxSize: "10mb"), use: addProfilePicturePostHandler)
 	}
 	
 	@Sendable func indexHandler(_ req: Request) -> EventLoopFuture<View> {
@@ -70,9 +74,13 @@ struct WebsiteController: RouteCollection {
 			.unwrap(or: Abort(.notFound))
 			.flatMap { user in
 				user.$acronyms.get(on: req.db).flatMap { acronyms in
-					let context = UserContext(title: "user.name",
+					// get the authenticated user from the Request's authentication cash
+					let loggedInUser = req.auth.get(User.self)
+					// pass it to the context, it's optional
+					let context = UserContext(title: user.name,
 																		user: user,
-																		acronyms: acronyms)
+																		acronyms: acronyms,
+																		authenticatedUser: loggedInUser)
 					return req.view.render("user", context)
 				}
 			}
@@ -399,6 +407,56 @@ struct WebsiteController: RouteCollection {
 			.transform(to: req.redirect(to: "/login"))
 	}
 	
+	@Sendable func addProfilePictureHandler(_ req: Request) -> EventLoopFuture<View> {
+		User.find(req.parameters.get("userID"), on: req.db)
+			.unwrap(or: Abort(.notFound)).flatMap { user in
+				req.view.render("addProfilePicture", ["title": "Add Profile Picture", "username": user.name])
+			}
+	}
+	
+	@Sendable func addProfilePicturePostHandler(_ req: Request) throws ->  EventLoopFuture<Response> {
+		// decode the request body (out image) into ImageUploadData
+		let data = try req.content.decode(ImageUploadData.self)
+		// search for the user
+		return User.find(req.parameters.get("userID"), on: req.db)
+			.unwrap(or: Abort(.notFound))
+			.flatMap { user in
+				// get the userID and handle the errors
+				let userID: UUID
+				do {
+					userID = try user.requireID()
+				} catch {
+					return req.eventLoop.future(error: error)
+				}
+				// create a name for your file
+				let name = "\(userID)-\(UUID()).jpg"
+				// setup the file using the root directory + image folder + name we just created
+				let path = req.application.directory.workingDirectory + imageFolder + name
+				// save the file on the disk
+				return req.fileio
+					.writeFile(.init(data: data.picture), at: path)
+					.flatMap {
+						// update the profile picture name in the user field
+						user.profilePicture = name
+						// save the user then redirect
+						let redirect = req.redirect(to: "/users/\(userID)")
+						return user.save(on: req.db).transform(to: redirect)
+					}
+			}
+	}
+	
+	@Sendable func getUsersProfilePictureHandler(_ req: Request) -> EventLoopFuture<Response> {
+		User.find(req.parameters.get("userID"), on: req.db)
+			.unwrap(or: Abort(.notFound))
+			.flatMapThrowing { user in
+				guard let filename = user.profilePicture else {
+					throw Abort(.notFound)
+				}
+				let path = req.application.directory.workingDirectory + imageFolder + filename
+				return req.fileio.streamFile(at: path)
+			}
+	}
+	
 	// end of WebsiteController function ( ͡❛ ᴗ ͡❛)( ͡❛ ᴗ ͡❛)( ͡❛ ᴗ ͡❛)
 	// ( ͡❛ ᴗ ͡❛)( ͡❛ ᴗ ͡❛)( ͡❛ ᴗ ͡❛)( ͡❛ ᴗ ͡❛)( ͡❛ ᴗ ͡❛)( ͡❛ ᴗ ͡❛)( ͡❛ ᴗ ͡❛)( ͡❛ ᴗ ͡❛)( ͡❛ ᴗ ͡❛)
 	// ( ͡❛ ᴗ ͡❛)( ͡❛ ᴗ ͡❛)( ͡❛ ᴗ ͡❛)
@@ -423,6 +481,7 @@ struct UserContext: Encodable {
 	let title: String
 	let user: User
 	let acronyms: [Acronym]
+	let authenticatedUser: User?
 }
 
 struct AllUsersContext: Encodable {
@@ -547,4 +606,8 @@ struct ResetPasswordContext: Encodable {
 struct ResetPasswordData: Content {
 	let password: String
 	let confirmPassword: String
+}
+
+struct ImageUploadData: Content {
+	var picture: Data
 }

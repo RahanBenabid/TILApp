@@ -3,6 +3,7 @@
 ## Introduction
 
 TILApp is a backend-focused application developed to explore and learn the Vapor framework, a server-side Swift web application framework. This project serves as a comprehensive learning tool, incorporating various backend functionalities and best practices.
+The User Interface is nothing crazy, but I'm more focused on implementing every major backend functionality a website should have.
 
 ### Key Features
 
@@ -10,8 +11,8 @@ TILApp is a backend-focused application developed to explore and learn the Vapor
 - **OAuth Integration**:
 	- Google OAuth
 	- GitHub OAuth
-- **Apple Authentication**: Implemented in a separate branch (`SIWA`) but currently inactive due to Apple Developer account limitations.
-- **Password Reset via Email**: Functionality in place, but inactive due to SendGrid account setup issues.
+- **Apple Authentication**: Implemented in a separate branch (`SIWA`) but currently inactive due to Apple Developer account limitations (needs a paid Apple Developer account).
+- **Password Reset via Email**: Functionality in place, but I didn't test it due to SendGrid account setup issues.
 - **Additional UX Enhancements**: Various minor features to improve user experience.
 
 ## Requirements
@@ -19,11 +20,18 @@ TILApp is a backend-focused application developed to explore and learn the Vapor
 - macOS
 - [Swift 5.3+][1]
 - [Vapor 4][2]
-- [PostgreSQL][3] (or any Fluent-supported database)
+- [PostgreSQL][3] (or any Fluent-supported database, mine uses PostgreSQL)
 
 ## Installation
 
-### Option 1: Command Line
+### Option 1: Xcode (macOS only)
+
+1. Open the project in Xcode.
+2. Wait for dependencies to download automatically.
+3. Set up a Docker container (see below).
+4. Run the project.
+
+### Option 2: Command Line
 
 1. **Clone the repository**
 ```bash
@@ -39,15 +47,8 @@ swift build
 
 3. **Start the server**
 ```bash
-vapor run serve
+vapor run server
 ```
-
-### Option 2: Xcode (macOS only)
-
-1. Open the project in Xcode.
-2. Wait for dependencies to download automatically.
-3. Set up a Docker container (see below).
-4. Run the project.
 
 ## Docker Setup
 

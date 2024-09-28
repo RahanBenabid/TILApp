@@ -22,13 +22,23 @@ final class User: Model {
 	@Field(key: "email")
 	var email: String
 	
+	@OptionalField(key: "profilePicture")
+	var profilePicture: String?
+	
 	init() {}
 	
-	init(id: UUID? = nil, name: String, username: String, password: String, email: String) {
+	init(
+		id: UUID? = nil,
+		name: String,
+		username: String,
+		password: String,
+		email: String,
+		profilePicture: String? = nil) {
 		self.name = name
 		self.username = username
     self.password = password
 		self.email = email
+		self.profilePicture = profilePicture // the nil initialisation will help the app continue to compile without change
 	}
 	
 	final class Public: Content {
