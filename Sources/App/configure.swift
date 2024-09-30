@@ -46,13 +46,20 @@ public func configure(_ app: Application) throws {
 	
 	// create/update the twitterURL, must be before the admin model so that it works when creating a new DB
 	app.migrations.add(AddTwitterToUser())
-	// create an admin, must be below the user migration
-	app.migrations.add(CreateAdminUser())
+	// create an admin, must be below the user migration and be created only in testing and development mode
+	switch app.environment {
+	case .development, .testing:
+		app.migrations.add(CreateAdminUser())
+	default:
+		break
+	}
+	// update the Categories model to have a unique name
+	app.migrations.add(MakeCategoriesUnique())
   
   app.logger.logLevel = .debug
   
   try app.autoMigrate().wait()
-  
+
   // to use Leaf when rendering
   app.views.use(.leaf)
   

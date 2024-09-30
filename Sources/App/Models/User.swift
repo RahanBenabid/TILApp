@@ -57,6 +57,20 @@ final class User: Model {
 			self.username = username
 		}
 	}
+	
+	final class PublicV2: Content {
+		var id: UUID?
+		var name: String
+		var username: String
+		var twitterURL: String?
+		
+		init(id: UUID?, name: String, username: String, twitterURL: String?) {
+			self.id = id
+			self.name = name
+			self.username = username
+			self.twitterURL = twitterURL
+		}
+	}
 }
 
 extension User: Content {}
@@ -66,14 +80,25 @@ extension User {
 	func convertToPublic() -> User.Public {
 		return User.Public(id: id, name: name, username: username)
 	}
+	
+	func convertToPublicV2() -> User.PublicV2 {
+		return User.PublicV2(id: id, name: name, username: username, twitterURL: twitterURL)
+	}
 }
 
 // this will help to reduce nesting, it will call convertToPublic() on EventLoopFuture<User>, [User] and EventLoopFuture<[User]>, they allow you to change your route to handle returning a public user
+// there is a lotta versions below to convert to all the kinds of instances you want
 
 extension EventLoopFuture where Value: User {
 	func convertToPublic() -> EventLoopFuture<User.Public> {
 		return self.map { user in
 			return user.convertToPublic()
+		}
+	}
+	
+	func convertToPublicV2() -> EventLoopFuture<User.PublicV2> {
+		return self.map { user in
+			return user.convertToPublicV2()
 		}
 	}
 }
@@ -82,11 +107,19 @@ extension Collection where Element: User {
 	func convertToPublic() -> [User.Public] {
 		return self.map { $0.convertToPublic() }
 	}
+	
+	func convertToPublicV2() -> [User.PublicV2] {
+		return self.map { $0.convertToPublicV2() }
+	}
 }
 
 extension EventLoopFuture where Value == Array<User> {
 	func convertToPublic() -> EventLoopFuture<[User.Public]> {
 		return self.map { $0.convertToPublic() }
+	}
+	
+	func convertToPublicV2() -> EventLoopFuture<[User.PublicV2]> {
+		return self.map { $0.convertToPublicV2() }
 	}
 }
 

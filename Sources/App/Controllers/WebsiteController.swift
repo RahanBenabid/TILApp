@@ -302,11 +302,17 @@ struct WebsiteController: RouteCollection {
 		
 		let data = try req.content.decode(RegisterData.self)
 		let password = try Bcrypt.hash(data.password)
+		var twitterURL: String?
+		if let twitter = data.twitterURL,
+			 !twitter.isEmpty {
+			twitterURL = twitter
+		}
 		let user = User(
 			name: data.name,
 			username: data.username,
 			password: password,
-			email: data.emailAddress)
+			email: data.emailAddress,
+			twitterURL: twitterURL)
 		return user.save(on: req.db).map {
 			req.auth.login(user)
 			return req.redirect(to: "/")
@@ -543,6 +549,7 @@ struct RegisterData: Content {
 	let password: String
 	let confirmPassword: String
 	let emailAddress: String
+	let twitterURL: String?
 }
 
 extension RegisterData: Validatable {
@@ -551,7 +558,7 @@ extension RegisterData: Validatable {
 		validations.add("username", as: String.self, is: .alphanumeric && .count(3...))
 		validations.add("password", as: String.self, is: .count(8...))
 		validations.add("zipCode", as: String.self, is: .zipCode, required: false)
-		validations.add("email", as: String.self, is: .email)
+		validations.add("email", as: String.self, is: .email, required: false)
 	}
 }
 
