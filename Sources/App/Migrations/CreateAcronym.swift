@@ -2,6 +2,7 @@ import Fluent
 
 // we define the new type
 struct CreateAcronym: Migration {
+	/*
     // this part below is required by miration, this metthod is called when you run it
     func prepare(on database: Database) -> EventLoopFuture<Void> {      
         // the table name, must match the schema from the model
@@ -17,9 +18,30 @@ struct CreateAcronym: Migration {
 			// create the table
             .create()
     }
+	 */
+	
+	func prepare(on database: any Database) -> EventLoopFuture<Void> {
+		database.schema(Acronym.v30092024.schemaName)
+			.id()
+			.field(Acronym.v30092024.short, .string, .required)
+			.field(Acronym.v30092024.long, .string, .required)
+			.field(Acronym.v30092024.userID, .uuid, .required, .references(User.v20240929.schemaName, User.v20240929.id))
+			.create()
+		
+	}
     
     // also required by Migration, will be called on revert, this deleltes the referenced table
     func revert(on database: Database) -> EventLoopFuture<Void> {
-        database.schema("acronyms").delete()
+			database.schema(Acronym.v30092024.schemaName).delete()
     }
+}
+
+extension Acronym {
+	enum v30092024 {
+		static let schemaName = "acronyms"
+		static let id = FieldKey(stringLiteral: "id")
+		static let short = FieldKey(stringLiteral: "short")
+		static let long = FieldKey(stringLiteral: "long")
+		static let userID = FieldKey(stringLiteral: "userID")
+	}
 }

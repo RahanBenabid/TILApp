@@ -7,23 +7,26 @@ final class User: Model {
 	@ID
 	var id: UUID?
 	
-	@Field(key: "name")
+	@Field(key: User.v20240929.name)
 	var name: String
 	
-	@Field(key: "username")
+	@Field(key: User.v20240929.username)
 	var username: String
-  
-  @Field(key: "password")
-  var password: String
+	
+	@Field(key: User.v20240929.password)
+	var password: String
 	
 	@Children(for: \.$user)
 	var acronyms: [Acronym]
 	
-	@Field(key: "email")
+	@Field(key: User.v20240929.email)
 	var email: String
 	
-	@OptionalField(key: "profilePicture")
+	@OptionalField(key: User.v20240929.profilePicture)
 	var profilePicture: String?
+	
+	@OptionalField(key: User.v20240930.twitterURL)
+	var twitterURL: String?
 	
 	init() {}
 	
@@ -33,13 +36,15 @@ final class User: Model {
 		username: String,
 		password: String,
 		email: String,
-		profilePicture: String? = nil) {
-		self.name = name
-		self.username = username
-    self.password = password
-		self.email = email
-		self.profilePicture = profilePicture // the nil initialisation will help the app continue to compile without change
-	}
+		profilePicture: String? = nil,
+		twitterURL: String? = nil) {
+			self.name = name
+			self.username = username
+			self.password = password
+			self.email = email
+			self.profilePicture = profilePicture // the nil initialisation will help the app continue to compile without change
+			self.twitterURL = twitterURL
+		}
 	
 	final class Public: Content {
 		var id: UUID?

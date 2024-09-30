@@ -44,7 +44,9 @@ public func configure(_ app: Application) throws {
 	app.migrations.add(CreateToken())
 	app.migrations.add(CreateResetPasswordToken())
 	
-	// create an admin
+	// create/update the twitterURL, must be before the admin model so that it works when creating a new DB
+	app.migrations.add(AddTwitterToUser())
+	// create an admin, must be below the user migration
 	app.migrations.add(CreateAdminUser())
   
   app.logger.logLevel = .debug

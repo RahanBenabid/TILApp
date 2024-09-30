@@ -118,7 +118,6 @@ struct WebsiteController: RouteCollection {
 	@Sendable func createAcronymHandler(_ req: Request) -> EventLoopFuture<View> {
 		User.query(on: req.db).all().flatMap { users in
 			let token = [UInt8].random(count: 16).base64
-//			print("\n\n token: ", token, "\n\n")
 			let context = CreateAcronymContext(csrfToken: token)
 			req.session.data["CSRF_TOKEN"] = token
 			return req.view.render("createAcronym", context)
