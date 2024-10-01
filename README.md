@@ -13,12 +13,13 @@ The User Interface is nothing crazy, but I'm more focused on implementing every 
 	- GitHub OAuth
 - **Apple Authentication**: Implemented in a separate branch (`SIWA`) but currently inactive due to Apple Developer account limitations (needs a paid Apple Developer account).
 - **Password Reset via Email**: Functionality in place, but I didn't test it due to SendGrid account setup issues.
+- **Caching**: Ended up taking this functionality to another smaller project in a private repository, since it ended up making the app a little buggy.
 - **Additional UX Enhancements**: Various minor features to improve user experience.
 
 ## Requirements
 
 - macOS
-- [Swift 5.3+][1]
+- [Swift 5][1]
 - [Vapor 4][2]
 - [PostgreSQL][3] (or any Fluent-supported database, mine uses PostgreSQL)
 
